@@ -15,7 +15,7 @@ Result:
     
 Author: Xifeng Guo, E-mail: `guoxifeng1990@163.com`, Github: `https://github.com/XifengGuo/CapsNet-Keras`
 """
-
+import keras
 from keras import layers, models, optimizers
 from keras import backend as K
 from keras.utils import to_categorical
@@ -33,10 +33,17 @@ def CapsNet(input_shape, n_class, n_route):
     x = layers.Input(shape=input_shape)
 
     # Layer 1: Just a conventional Conv2D layer
-    conv1 = layers.Conv2D(filters=256, kernel_size=8, strides=1, padding='valid', activation='relu', name='conv1')(x)
+    conv1 = layers.Conv2D(filters=50, kernel_size=8, strides=1, padding='valid', activation='relu', name='conv1')(x)
+
+    conv2 = layers.Conv2D(filters=150, kernel_size=8, strides=1, padding='same', activation='relu', name='conv2')(conv1)
+
+    conv3 = layers.Conv2D(filters=256, kernel_size=8, strides=1, padding='same', activation='relu', name='conv3')(conv2)
+
+    merged_conv = keras.layers.concatenate([conv1, conv2, conv3], axis=-1)
+
 
     # Layer 2: Conv2D layer with `squash` activation, then reshape to [None, num_capsule, dim_vector]
-    primarycaps = PrimaryCap(conv1, dim_vector=8, n_channels=32, kernel_size=9, strides=2, padding='valid')
+    primarycaps = PrimaryCap(merged_conv, dim_vector=8, n_channels=32, kernel_size=9, strides=2, padding='valid')
 
     # Layer 3: Capsule layer. Routing algorithm works here.
     digitcaps = CapsuleLayer(num_capsule=n_class, dim_vector=16, num_routing=n_route, name='digitcaps')(primarycaps)
