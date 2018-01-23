@@ -55,10 +55,17 @@ def CapsNet(input_shape, n_class, n_route):
     # Decoder network.
     y = layers.Input(shape=(n_class,))
     masked = Mask()([digitcaps, y])  # The true label is used to mask the output of capsule layer.
-    x_recon = layers.Dense(512, activation='relu')(masked)
-    x_recon = layers.Dense(1024, activation='relu')(x_recon)
-    x_recon = layers.Dense(np.prod(input_shape), activation='sigmoid')(x_recon)
-    x_recon = layers.Reshape(target_shape=input_shape, name='out_recon')(x_recon)
+    
+    x_recon = layers.Reshape(target_shape= [4,4,1])(masked)
+    x_recon = layers.Deconvolution2D(30,3,3, subsample =(2,2), output_shape=(9,9,3))(x_recon)
+    x_recon = layers.Deconvolution2D(25,3,3, subsample = (2,2), output_shape=(19,19,3))(x_recon)
+    x_recon = layers.Deconvolution2D(10,8,8)(x_recon)
+    x_recon = layers.Deconvolution2D(3,7,7)(x_recon)
+
+#    x_recon = layers.Dense(512, activation='relu')(masked)
+#    x_recon = layers.Dense(1024, activation='relu')(x_recon)
+#    x_recon = layers.Dense(np.prod(input_shape), activation='sigmoid')(x_recon)
+#    x_recon = layers.Reshape(target_shape=input_shape, name='out_recon')(x_recon)
 
     # two-input-two-output keras Model
     return models.Model([x, y], [out_caps, x_recon])
